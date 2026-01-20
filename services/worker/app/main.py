@@ -4,9 +4,8 @@ main.py
 FastAPI worker service.
 
 Endpoints:
-- GET /            (root info)
-- GET /health      (health check)
-- HEAD /health     (Render probe)
+- GET /            (friendly landing)
+- GET /health      (Render health check)
 - POST /enqueue    (runs a job)
 
 For now, enqueue runs synchronously (simple, debuggable).
@@ -14,7 +13,7 @@ Later: we can add a queue + background workers.
 """
 
 from datetime import datetime
-from fastapi import FastAPI, Header, HTTPException
+from fastapi import FastAPI, Header, HTTPException, Request
 from pydantic import BaseModel
 from supabase import create_client
 
@@ -30,7 +29,6 @@ class EnqueueRequest(BaseModel):
     job_id: str
 
 
-# ✅ Root endpoint (so Render "/" doesn't show 404)
 @app.get("/")
 def root():
     return {
@@ -38,15 +36,20 @@ def root():
         "service": "InvoiceMe Worker",
         "endpoints": {
             "health": "/health (GET/HEAD)",
-            "enqueue": "/enqueue (POST)"
-        }
+            "enqueue": "/enqueue (POST)",
+        },
     }
 
 
-# ✅ Health endpoint supports both GET and HEAD (Render sometimes probes with HEAD)
-@app.api_route("/health", methods=["GET", "HEAD"])
+@app.get("/health")
 def health():
     return {"ok": True, "service": "InvoiceMe Worker"}
+
+
+# Optional: Render sometimes sends HEAD checks
+@app.head("/health")
+def health_head():
+    return
 
 
 @app.post("/enqueue")
@@ -67,12 +70,11 @@ def enqueue(req: EnqueueRequest, x_worker_token: str = Header(default="")):
     try:
         run_job(req.job_id)
 
-        # ✅ Mark done after success (recommended)
         supabase.table("jobs").update(
             {
                 "status": "done",
                 "finished_at": datetime.utcnow().isoformat(),
-                "message": "Completed"
+                "message": "Completed",
             }
         ).eq("id", req.job_id).execute()
 
