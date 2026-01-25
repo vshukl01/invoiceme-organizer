@@ -2,7 +2,7 @@ import "server-only";
 
 import * as bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
-import { env } from "@/lib/env";
+import { env } from "@/lib/env.server";
 import { supabaseAdmin } from "@/lib/db";
 
 export type SessionUser = {

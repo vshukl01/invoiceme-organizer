@@ -62,7 +62,7 @@ export default function DashboardClient({ user }: { user: User }) {
       const res = await fetch("/api/jobs/create", { method: "POST" });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "Failed to create job");
-      setMsg(`Job created ✅ (${data.jobId})`);
+      setMsg(`Job created (${data.jobId})`);
       await loadJobs();
     } catch (e: any) {
       setMsg(e?.message || "Error");
