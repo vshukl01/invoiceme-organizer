@@ -1,5 +1,4 @@
-import { env } from "@/lib/env.server";
-
+import { env } from "@/lib/env";
 
 export async function enqueueJob(payload: { jobId: string }) {
   const res = await fetch(`${env.WORKER_BASE_URL}/enqueue`, {

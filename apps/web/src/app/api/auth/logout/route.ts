@@ -1,7 +1,10 @@
+// apps/web/src/app/api/auth/logout/route.ts
+import "server-only";
+
 import { NextResponse } from "next/server";
+import { clearSessionCookie } from "@/lib/auth";
 
 export async function POST() {
-  const res = NextResponse.json({ ok: true });
-  res.cookies.set("invoiceme_user", "", { maxAge: 0, path: "/" });
-  return res;
+  clearSessionCookie();
+  return NextResponse.json({ ok: true });
 }
