@@ -1,3 +1,13 @@
+// apps/web/src/lib/workerClient.ts
+import "server-only";
+
+/**
+ * workerClient.ts
+ * Calls your FastAPI worker (Render).
+ * - Uses WORKER_BASE_URL
+ * - Sends x-worker-token header
+ */
+
 import { env } from "@/lib/env";
 
 export async function enqueueJob(payload: { jobId: string }) {

@@ -4,8 +4,8 @@ import "server-only";
 /**
  * Login route:
  * - Looks up user from public.users
- * - Checks approved flag
  * - Verifies password_hash via bcrypt
+ * - Checks approved flag
  * - Sets session cookie
  */
 
@@ -20,37 +20,35 @@ export async function POST(req: Request) {
   const password = String(body?.password || "");
 
   if (!email || !password) {
-    return NextResponse.json({ error: "Missing email or password" }, { status: 400 });
+    return NextResponse.json({ ok: false, error: "Missing email or password" }, { status: 400 });
   }
 
   const sb = supabaseAdmin();
 
-  /**
-   * IMPORTANT:
-   * This must query the app table `public.users`, not `auth.users`.
-   */
+  // Always query app table: public.users
   const { data: user, error } = await sb
     .from("users")
     .select("id,email,password_hash,approved,is_admin,org_id")
     .eq("email", email)
     .maybeSingle();
 
+  // Don't reveal whether user exists
   if (error || !user) {
-    return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+    return NextResponse.json({ ok: false, error: "Invalid credentials" }, { status: 401 });
+  }
+
+  // Password check first (prevents leaking approval state for unknown users)
+  const passOk = await bcrypt.compare(password, user.password_hash || "");
+  if (!passOk) {
+    return NextResponse.json({ ok: false, error: "Invalid credentials" }, { status: 401 });
   }
 
   // Approved check
   if (!user.approved) {
     return NextResponse.json(
-      { error: "Your account is not approved yet. Please contact admin." },
+      { ok: false, error: "Your account is not approved yet. Please contact admin." },
       { status: 403 }
     );
-  }
-
-  // Password check
-  const ok = await bcrypt.compare(password, user.password_hash || "");
-  if (!ok) {
-    return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
   }
 
   // Set cookie session

@@ -2,37 +2,25 @@
 import "server-only";
 
 /**
- * This file ONLY runs on the server.
+ * db.ts
+ * Server-side Supabase clients.
  *
- * It creates:
- * - anon client (safe, limited)
- * - admin client (SERVICE_ROLE - full DB access)
+ * supabaseAnon:
+ * - uses anon key (safe for limited server reads if needed)
  *
- * IMPORTANT:
- * - Never use service role key in the browser.
- * - Only import supabaseAdmin() from server files (route handlers, server actions).
+ * supabaseAdmin:
+ * - uses SERVICE_ROLE key (server-only) for full DB access (bypasses RLS)
  */
 
 import { createClient } from "@supabase/supabase-js";
 import { env } from "@/lib/env";
 
-/**
- * Public client:
- * - Uses anon key
- * - Can be used for safe reads if needed
- */
 export function supabaseAnon() {
   return createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
     auth: { persistSession: false },
   });
 }
 
-/**
- * Admin client:
- * - Uses SERVICE ROLE key
- * - Bypasses RLS
- * - Use ONLY on server
- */
 export function supabaseAdmin() {
   return createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
     auth: { persistSession: false },
